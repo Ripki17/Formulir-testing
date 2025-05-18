@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Panel Admin - Data Pendaftar</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; background: #f8f8f8; }
+    .card { background: white; padding: 15px; margin-bottom: 20px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+    canvas { display: block; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Data Pendaftar</h1>
+  <div id="dataContainer">Memuat data...</div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "API_KEY_KAMU",
+      authDomain: "PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://PROJECT_ID.firebaseio.com",
+      projectId: "PROJECT_ID",
+      storageBucket: "PROJECT_ID.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const container = document.getElementById("dataContainer");
+    db.ref("pendaftaran").once("value", snapshot => {
+      container.innerHTML = "";
+      snapshot.forEach(child => {
+        const data = child.val();
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+          <b>Nama:</b> ${data.nama}<br/>
+          <b>NIS:</b> ${data.nis}<br/>
+          <b>Kelas:</b> ${data.kelas}<br/>
+          <b>Instansi:</b> ${data.instansi}<br/>
+          <canvas width="600" height="300"></canvas>
+        `;
+
+        container.appendChild(div);
+
+        const canvas = div.querySelector("canvas");
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#f0f0f0";
+        ctx.fillRect(0, 0, 600, 300);
+        ctx.fillStyle = "#333";
+        ctx.font = "bold 22px Arial";
+        ctx.fillText("KARTU IDENTITAS", 200, 40);
+        ctx.font = "18px Arial";
+        ctx.fillText(`Nama: ${data.nama}`, 50, 100);
+        ctx.fillText(`NIS/NIM: ${data.nis}`, 50, 140);
+        ctx.fillText(`Kelas: ${data.kelas}`, 50, 180);
+        ctx.fillText(`Instansi: ${data.instansi}`, 50, 220);
+      });
+    });
+  </script>
+</body>
+</html>

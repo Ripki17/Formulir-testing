@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Formulir Pendaftaran</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    form { max-width: 400px; margin: auto; }
+    input, button { width: 100%; margin: 10px 0; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Formulir Pendaftaran</h2>
+  <form id="registerForm">
+    <input type="text" name="nama" placeholder="Nama Lengkap" required />
+    <input type="text" name="nis" placeholder="NIS / NIM" required />
+    <input type="text" name="kelas" placeholder="Kelas / Jurusan" required />
+    <input type="text" name="instansi" placeholder="Instansi / Sekolah" required />
+    <button type="submit">Kirim</button>
+  </form>
+
+  <canvas id="idCardCanvas" width="600" height="300" style="display:none;"></canvas>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "API_KEY_KAMU",
+      authDomain: "PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://PROJECT_ID.firebaseio.com",
+      projectId: "PROJECT_ID",
+      storageBucket: "PROJECT_ID.appspot.com",
+      messagingSenderId: "SENDER_ID",
+      appId: "APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const form = document.getElementById("registerForm");
+    const canvas = document.getElementById("idCardCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const TELEGRAM_BOT_TOKEN = 'ISI_TOKEN_BOT_KAMU';
+    const TELEGRAM_CHAT_ID = 'ISI_CHAT_ID_KAMU';
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const nama = data.get("nama");
+      const nis = data.get("nis");
+      const kelas = data.get("kelas");
+      const instansi = data.get("instansi");
+
+      ctx.fillStyle = "#f0f0f0";
+      ctx.fillRect(0, 0, 600, 300);
+      ctx.fillStyle = "#333";
+      ctx.font = "bold 22px Arial";
+      ctx.fillText("KARTU IDENTITAS", 200, 40);
+      ctx.font = "18px Arial";
+      ctx.fillText(`Nama: ${nama}`, 50, 100);
+      ctx.fillText(`NIS/NIM: ${nis}`, 50, 140);
+      ctx.fillText(`Kelas: ${kelas}`, 50, 180);
+      ctx.fillText(`Instansi: ${instansi}`, 50, 220);
+
+      canvas.style.display = "block";
+      const imgBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+      // Kirim ke Telegram
+      const formData = new FormData();
+      formData.append("chat_id", TELEGRAM_CHAT_ID);
+      formData.append("caption", `Pendaftaran Baru:\nNama: ${nama}\nNIS: ${nis}\nKelas: ${kelas}\nInstansi: ${instansi}`);
+      formData.append("photo", imgBlob, "id_card.png");
+
+      fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+        method: "POST",
+        body: formData
+      }).then(() => alert("Data berhasil dikirim ke Telegram!"))
+        .catch(err => alert("Gagal mengirim ke Telegram: " + err));
+
+      // Simpan ke Firebase
+      db.ref("pendaftaran").push({
+        nama: nama,
+        nis: nis,
+        kelas: kelas,
+        instansi: instansi
+      });
+    });
+  </script>
+</body>
+</html>
